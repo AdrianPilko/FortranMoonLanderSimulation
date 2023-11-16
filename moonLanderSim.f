@@ -13,24 +13,43 @@ C            X(T) = X0 + V0*T + 1/2*A*T**2
 C            F=MASS * ACCELERATION
 C            V=0 INITIALLY AND -'VE DOWN
       REAL F, VEHICLEMASS, AY, G 
-      REAL T, X, Y, THRUSTX, THRUSTY, FUELQTY, V
+      REAL T, X, Y,Y0, THRUSTX, THRUSTY, FUELQTY, V, V0
       G=1.625
       X=-100
-      Y=1000
+      Y0=1000
+      Y=Y0
       V=0
+      V0=0
       T=1
-      F=100
-      VEHICLEMASS=1000+F
-      
+      F=40
+      AY=-G
+      VEHICLEMASS=100+F
+      PRINT *,'INITIAL CONDITIONS'
+      PRINT *,'TIME',T,'VELOCITY',V,'ALTITUDE',Y,'FUELMASS',F,'ACC',AY
+
 13    WRITE(*,*)'ENTER THE MAIN ENGINE % THRUST(VERTICAL)'
       READ (*,*)THRUSTY
-      AY=-G+((THRUSTY*150) / VEHICLEMASS)
-      Y= Y + (V*T) + (0.5*AY*T**2)
-      V= V + AY*T 
-     
-C     REDUCE MASS BY A FACTOR OF THE THRUSTY      
-      F = F - (THRUSTY * 0.05)
-      VEHICLEMASS = 1000+FUELMASS
+C 13    THRUSTY=30
+C     F=MA
+C     A=F/A
+      IF (F .LT. 0) THEN
+         AY = -G
+         F = 0
+         PRINT *,'UH OH, FUEL EMPTY!!!!'
+      ELSE
+         AY =  ((THRUSTY*45.0) / VEHICLEMASS) - G
+      END IF
+
+      V = (AY*T)
+      Y = Y + V
+C     REDUCE MASS BY A FACTOR OF THE THRUSTY     
+      IF (F .LT. 0) THEN
+         F = 0
+      ELSE     
+         F = F - (THRUSTY * 0.002)
+      END IF
+
+      VEHICLEMASS = 1000.0+F
       PRINT *,'TIME',T,'VELOCITY',V,'ALTITUDE',Y,'FUELMASS',F,'ACC',AY
       T=T+1
       IF (Y .GT. 0) GOTO 13
@@ -39,4 +58,3 @@ C     REDUCE MASS BY A FACTOR OF THE THRUSTY
       IF (V .LT. -0.5) PRINT *,'GOOD LANDING'
 41    PRINT *,'END SIMULATION' 
       END
-
