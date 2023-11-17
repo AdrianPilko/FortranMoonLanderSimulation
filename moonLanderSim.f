@@ -53,6 +53,8 @@ C     SETUP INITIAL CONDITIONS AND CONSTANTS
       M_ENG_MAXT=16000
       VMASS_DRY=4280
       VMASS=VMASS_DRY+FMASS
+      OPEN (unit=48, file='flightData.csv')
+
       PRINT *,'INITIAL CONDITIONS'
       PRINT *,'=================='
       PRINT *,'TIME  =',T,     'ALT  =',Y_ALT, 'VELOCITY=',V
@@ -90,6 +92,8 @@ C     CHECK IF WE HAVE ENOUGH FUEL, IF LESS THAN ZERO SET T_MAIN=0
       PRINT *,'T_MAIN=',T_MAIN,'FMASS=',FMASS, 'VMASS   =',VMASS
       PRINT *,'VERTICAL ACCELERATION=',AY
       
+      WRITE(48,*) T,Y_ALT
+
       IF (BURNDUR .GT. 0) GOTO 56
       
       
@@ -108,4 +112,7 @@ C     CHECK IF WE HAVE ENOUGH FUEL, IF LESS THAN ZERO SET T_MAIN=0
       PRINT *,'FUELMASS (KG) REMAINING',FMASS
       PRINT *,'FUELMASS % REMAINING',((FMASS / FMASS_INITIAL)*100)
       PRINT *,'END SIMULATION' 
+      
+      CLOSE(48)
+      CALL SYSTEM('gnuplot -p flightData.plt');
       END
