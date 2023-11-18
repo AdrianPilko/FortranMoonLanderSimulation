@@ -38,7 +38,7 @@ C     PER PERCENTAGE THRUST
 
 C     SETUP INITIAL CONDITIONS AND CONSTANTS      
       GRAV= -1.625      
-      Y0=601
+      Y0=1000.0
       Y_ALT=Y0
       V=0
       V0=0
@@ -83,16 +83,33 @@ C     CHECK IF WE HAVE ENOUGH FUEL, IF LESS THAN ZERO SET T_MAIN=0
             T_MAIN=(BURNPERCENT / 100.0)*(M_ENG_MAXT)
             FMASS=FMASS - (BURNFACTOR * BURNPERCENT*DT)
          ELSE
-            IF (Y_ALT .LT. 600.0) THEN
-               IF (V .GT. 0.1) THEN 
-                   BURNPERCENT=1.0
-                   BURNDUR=1.0
-               END IF
-               IF (V .LT. -1.0) THEN
-                   BURNPERCENT=62.0
-                   BURNDUR=1.0
-               END IF 
-            END IF
+            IF (Y_ALT .LT. 700) THEN
+              IF (V .GT. 0.1) THEN 
+                BURNPERCENT=0.0
+                BURNDUR=0.2
+              ELSE IF (V .LT. -10.0) THEN
+                BURNPERCENT=100
+                BURNDUR=0.2
+              ELSE IF (V .LT. -5.0) THEN
+                BURNPERCENT=80
+                BURNDUR=0.2
+              ELSE IF (V .LT. -2.5) THEN
+                BURNPERCENT=77.0
+                BURNDUR=0.2
+              ELSE IF (V .LT. -1.5) THEN
+                BURNPERCENT=75.0
+                BURNDUR=0.2
+              ELSE IF (V .LT. -1.0) THEN
+                BURNPERCENT=70.0
+                BURNDUR=0.2
+              ELSE IF (V .LT. -0.5) THEN
+                BURNPERCENT=58.0
+                BURNDUR=0.2
+              ELSE IF (V .LT. -0.2) THEN
+                BURNPERCENT=35.0
+                BURNDUR=0.2
+              END IF 
+            END IF 
             T_MAIN=(BURNPERCENT / 100.0)*(M_ENG_MAXT)
             FMASS=FMASS - (BURNFACTOR * BURNPERCENT*DT)
          END IF
@@ -117,13 +134,15 @@ C     CHECK IF WE HAVE ENOUGH FUEL, IF LESS THAN ZERO SET T_MAIN=0
       WRITE(48,*) T,Y_ALT
       WRITE(49,*) T,FMASS
 
+      IF (Y_ALT .LT. 0.0) GOTO 136
+
       IF (BURNDUR .GT. 0.001) GOTO 56
       
       
 C     CALL SYSTEM('gnuplot -p AltitudeTimeData.plt');
 C     CALL SYSTEM('gnuplot -p FuelTimeData.plt');
       
-      IF (Y_ALT .GT. 0) THEN
+      IF (Y_ALT .GT. 0.0) THEN
           IF (RUNAUTO .NE. 1) THEN 
              GOTO 52   
           ELSE
@@ -131,7 +150,7 @@ C             CALL SLEEP(1)
              GOTO 56
           END IF
       END IF   
-      IF (V .LT. -1.0)  THEN
+136   IF (V .LT. -1.0) THEN
           PRINT *,'######## HEAVY LANDING CRASH #########'      
       ELSE
           PRINT *,'*********** GOOD LANDING *************'
