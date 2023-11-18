@@ -32,3 +32,5 @@
 *.app
 moonlander
 flightData.csv
+FuelTimeData.csv
+AltitudeTimeData.csv

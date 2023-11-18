@@ -32,12 +32,13 @@ C     PER PERCENTAGE THRUST
       DOUBLEPRECISION DY, Y0, Y_ALT
       DOUBLEPRECISION T_MAIN,M_ENG_MAXT      
       DOUBLEPRECISION V0, DV ,V
+      INTEGER RUNAUTO
       
       
 
 C     SETUP INITIAL CONDITIONS AND CONSTANTS      
       GRAV= -1.625      
-      Y0=1000
+      Y0=601
       Y_ALT=Y0
       V=0
       V0=0
@@ -53,7 +54,8 @@ C     SETUP INITIAL CONDITIONS AND CONSTANTS
       M_ENG_MAXT=16000
       VMASS_DRY=4280
       VMASS=VMASS_DRY+FMASS
-      OPEN (unit=48, file='flightData.csv')
+      OPEN (unit=48, file='AltitudeTimeData.csv')
+      OPEN (unit=49, file='FuelTimeData.csv')
 
       PRINT *,'INITIAL CONDITIONS'
       PRINT *,'=================='
@@ -67,13 +69,33 @@ C     SETUP INITIAL CONDITIONS AND CONSTANTS
       WRITE(*,*)'ENTER THE BURN DURATION (SEC) INCLUDING FRACTIONS OF'
       READ (*,*)BURNDUR
 
+      IF (BURNPERCENT .LT. 0.01) THEN
+          RUNAUTO=1
+          BURNDUR=0.1
+          BURNPERCENT=0
+      END IF
 C     CHECK IF WE HAVE ENOUGH FUEL, IF LESS THAN ZERO SET T_MAIN=0
 56    IF ((FMASS-(BURNFACTOR * BURNPERCENT*DT)) .LT. 0.05) THEN
          T_MAIN = 0.0
          F_MASS = 0.0
-      ELSE 
-         T_MAIN=(BURNPERCENT / 100.0)*(M_ENG_MAXT)
-         FMASS=FMASS - (BURNFACTOR * BURNPERCENT*DT)
+      ELSE
+         IF (RUNAUTO .NE. 1) THEN
+            T_MAIN=(BURNPERCENT / 100.0)*(M_ENG_MAXT)
+            FMASS=FMASS - (BURNFACTOR * BURNPERCENT*DT)
+         ELSE
+            IF (Y_ALT .LT. 600.0) THEN
+               IF (V .GT. 0.1) THEN 
+                   BURNPERCENT=1.0
+                   BURNDUR=1.0
+               END IF
+               IF (V .LT. -1.0) THEN
+                   BURNPERCENT=62.0
+                   BURNDUR=1.0
+               END IF 
+            END IF
+            T_MAIN=(BURNPERCENT / 100.0)*(M_ENG_MAXT)
+            FMASS=FMASS - (BURNFACTOR * BURNPERCENT*DT)
+         END IF
       END IF
 
       AY =  (T_MAIN / VMASS) + GRAV
@@ -93,12 +115,22 @@ C     CHECK IF WE HAVE ENOUGH FUEL, IF LESS THAN ZERO SET T_MAIN=0
       PRINT *,'VERTICAL ACCELERATION=',AY
       
       WRITE(48,*) T,Y_ALT
+      WRITE(49,*) T,FMASS
 
-      IF (BURNDUR .GT. 0) GOTO 56
+      IF (BURNDUR .GT. 0.001) GOTO 56
       
       
+C     CALL SYSTEM('gnuplot -p AltitudeTimeData.plt');
+C     CALL SYSTEM('gnuplot -p FuelTimeData.plt');
       
-      IF (Y_ALT .GT. 0) GOTO 52      
+      IF (Y_ALT .GT. 0) THEN
+          IF (RUNAUTO .NE. 1) THEN 
+             GOTO 52   
+          ELSE
+C             CALL SLEEP(1)
+             GOTO 56
+          END IF
+      END IF   
       IF (V .LT. -1.0)  THEN
           PRINT *,'######## HEAVY LANDING CRASH #########'      
       ELSE
@@ -114,5 +146,7 @@ C     CHECK IF WE HAVE ENOUGH FUEL, IF LESS THAN ZERO SET T_MAIN=0
       PRINT *,'END SIMULATION' 
       
       CLOSE(48)
-      CALL SYSTEM('gnuplot -p flightData.plt');
+      CLOSE(49);
+      CALL SYSTEM('gnuplot -p AltitudeTimeData.plt');
+      CALL SYSTEM('gnuplot -p FuelTimeData.plt');
       END
