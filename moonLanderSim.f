@@ -56,6 +56,7 @@ C     SETUP INITIAL CONDITIONS AND CONSTANTS
       VMASS=VMASS_DRY+FMASS
       OPEN (unit=48, file='AltitudeTimeData.csv')
       OPEN (unit=49, file='FuelTimeData.csv')
+      OPEN (unit=50, file='ThrustTimeData.csv')
 
       PRINT *,'INITIAL CONDITIONS'
       PRINT *,'=================='
@@ -69,7 +70,7 @@ C     SETUP INITIAL CONDITIONS AND CONSTANTS
       WRITE(*,*)'ENTER THE BURN DURATION (SEC) INCLUDING FRACTIONS OF'
       READ (*,*)BURNDUR
 
-      IF (BURNPERCENT .LT. 0.01) THEN
+      IF (BURNPERCENT .EQ. -1) THEN
           RUNAUTO=1
           BURNDUR=0.1
           BURNPERCENT=0
@@ -133,14 +134,11 @@ C     CHECK IF WE HAVE ENOUGH FUEL, IF LESS THAN ZERO SET T_MAIN=0
       
       WRITE(48,*) T,Y_ALT
       WRITE(49,*) T,FMASS
+      WRITE(50,*) T,T_MAIN
 
       IF (Y_ALT .LT. 0.0) GOTO 136
 
       IF (BURNDUR .GT. 0.001) GOTO 56
-      
-      
-C     CALL SYSTEM('gnuplot -p AltitudeTimeData.plt');
-C     CALL SYSTEM('gnuplot -p FuelTimeData.plt');
       
       IF (Y_ALT .GT. 0.0) THEN
           IF (RUNAUTO .NE. 1) THEN 
@@ -166,6 +164,8 @@ C             CALL SLEEP(1)
       
       CLOSE(48)
       CLOSE(49);
-      CALL SYSTEM('gnuplot -p AltitudeTimeData.plt');
-      CALL SYSTEM('gnuplot -p FuelTimeData.plt');
+      CLOSE(50);
+      CALL SYSTEM('gnuplot -p AltitudeTimeData.plt')
+      CALL SYSTEM('gnuplot -p FuelTimeData.plt')
+      CALL SYSTEM('gnuplot -p ThrustTimeData.plt')
       END
